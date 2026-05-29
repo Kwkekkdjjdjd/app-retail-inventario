@@ -7,27 +7,23 @@ st.set_page_config(page_title="The Consumer App", layout="centered")
 # --- SISTEMA DE SEGURIDAD: OCULTAR MENÚ PARA CLIENTES ---
 st.markdown("""
     <style>
-        /* Oculta la flechita de arriba a la izquierda para abrir el menú */
         [data-testid="collapsedControl"] {display: none;}
-        /* Oculta la barra lateral completa */
         [data-testid="stSidebar"] {display: none;}
     </style>
 """, unsafe_allow_html=True)
 # --------------------------------------------------------
 
-# --- DICCIONARIO DE IMÁGENES DE PRODUCTOS (¡NUEVO!) ---
-# Para que se vea super pro, mapearemos nombres de productos a URLs reales de imágenes.
+# --- IMÁGENES A PRUEBA DE FALLOS (WIKIMEDIA COMMONS) ---
 MAP_IMAGENES = {
-    # Categoría: Carnes
-    "Vacuno": "https://images.pexels.com/photos/1018671/pexels-photo-1018671.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    "Cerdo": "https://images.pexels.com/photos/1572979/pexels-photo-1572979.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    # Categoría: Lácteos
-    "Queso": "https://images.pexels.com/photos/1614742/pexels-photo-1614742.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    "Leche": "https://images.pexels.com/photos/159495/milk-products-bottles-glass-159495.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    # Categoría: Frutas
-    "Fruta": "https://images.pexels.com/photos/1131688/pexels-photo-1131688.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    # Genérico por si acaso
-    "Fallback": "https://images.pexels.com/photos/4033282/pexels-photo-4033282.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "vacuno": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Roast_beef_01.jpg/240px-Roast_beef_01.jpg",
+    "carne": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Roast_beef_01.jpg/240px-Roast_beef_01.jpg",
+    "cerdo": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Pork_chops_on_a_plate.jpg/240px-Pork_chops_on_a_plate.jpg",
+    "queso": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Swiss_cheese_cube.jpg/240px-Swiss_cheese_cube.jpg",
+    "leche": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Milk_glass.jpg/240px-Milk_glass.jpg",
+    "fruta": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Culinary_fruits_front_view.jpg/240px-Culinary_fruits_front_view.jpg",
+    "jamon": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Sliced_ham.jpg/240px-Sliced_ham.jpg",
+    "jamón": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Sliced_ham.jpg/240px-Sliced_ham.jpg",
+    "fallback": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Icon_product_box.svg/240px-Icon_product_box.svg.png"
 }
 
 st.title("📱 The Consumer App")
@@ -71,22 +67,28 @@ try:
             with st.container(border=True):
                 col1, col2, col3 = st.columns([1, 3, 1])
                 
-                # --- COLUMNA 1: IMAGEN REAL DEL PRODUCTO (¡ARREGLADO!) ---
+                # --- COLUMNA 1: IMAGEN CON BUSCADOR INTELIGENTE ---
                 with col1:
-                    # Buscaremos una imagen basada en la descripción del producto o su categoría (fallback)
-                    # He añadido URLs de imágenes reales para Vacuno, Cerdo, Queso, Leche y Fruta.
-                    url_imagen = MAP_IMAGENES.get(row['producto'].capitalize(), MAP_IMAGENES["Fallback"])
-                    st.image(url_imagen, width=70) # Mostramos una imagen real de 70px de ancho
+                    # Limpiamos el nombre: todo a minúsculas para que no importen las mayúsculas
+                    nombre_prod = str(row['producto']).strip().lower()
+                    url_img = MAP_IMAGENES["fallback"] # Imagen por defecto (la cajita)
+                    
+                    # Buscamos si alguna palabra clave está en el nombre del producto
+                    for clave, url in MAP_IMAGENES.items():
+                        if clave in nombre_prod:
+                            url_img = url
+                            break # Si encuentra una, deja de buscar
+                            
+                    st.image(url_img, width=80) 
 
-                # --- COLUMNA 2: DETALLES DEL PRODUCTO ---
+                # --- COLUMNA 2: DETALLES Y PRECIO EN HTML INFALIBLE ---
                 with col2:
                     st.markdown(f"### **{row['producto']}**")
                     st.caption(f"📍 {row['sucursal']} | SKU: `{row['lote']}`")
                     
-                    # --- PRECIO ROTO Y ARREGLADO CON SINTAXIS TIGHT ---
-                    # Para que se note bien, he tachado el precio original y el final es de color rojo y negrita.
-                    # El truco es eliminar cualquier espacio invisible o extra para que el markdown funcione.
-                    st.markdown(f"~~${row['precio_original']}~~ ➡️ **:red[${row['precio_final']}]**")
+                    # Usamos HTML puro. <del> tacha el texto. <span> le da color y negrita.
+                    precio_html = f"<del>${row['precio_original']}</del> ➡️ <span style='color:red; font-weight:bold; font-size:1.1em;'>${row['precio_final']}</span>"
+                    st.markdown(precio_html, unsafe_allow_html=True)
                     
                     st.progress(int(row['frescura_ia']))
                 
@@ -95,5 +97,4 @@ try:
                     qr = f"https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={row['lote']}"
                     st.image(qr)
 except Exception as e:
-    # Añado la impresión del error para que sea más fácil depurar en el futuro
     st.error(f"Error al cargar ofertas: {e}")
