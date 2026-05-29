@@ -5,6 +5,15 @@ import random
 import pandas as pd
 import numpy as np
 
+# --- SISTEMA DE SEGURIDAD PARA TRABAJADORES ---
+st.sidebar.markdown("---")
+clave = st.sidebar.text_input("🔑 Clave de Acceso", type="password")
+
+if clave != "super2026": # <-- Contraseña del supermercado
+    st.error("🔒 Acceso Restringido. Ingresa la clave en el menú lateral para gestionar el inventario.")
+    st.stop() # Esto detiene la carga visual si no hay clave
+# ----------------------------------------------
+
 # --- MATRIZ DE PARÁMETROS DE PRODUCTOS ---
 MATRIZ_PARAMETROS = {
     "Carnes y Fiambres": (15, 2.0, "CARN"),

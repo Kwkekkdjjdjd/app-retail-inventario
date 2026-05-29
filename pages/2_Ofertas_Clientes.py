@@ -3,6 +3,18 @@ import sqlite3
 import pandas as pd
 
 st.set_page_config(page_title="The Consumer App", layout="centered")
+
+# --- SISTEMA DE SEGURIDAD: OCULTAR MENÚ PARA CLIENTES ---
+st.markdown("""
+    <style>
+        /* Oculta la flechita de arriba a la izquierda para abrir el menú */
+        [data-testid="collapsedControl"] {display: none;}
+        /* Oculta la barra lateral completa */
+        [data-testid="stSidebar"] {display: none;}
+    </style>
+""", unsafe_allow_html=True)
+# --------------------------------------------------------
+
 st.title("📱 The Consumer App")
 
 # --- COORDENADAS PARA EL MAPA ---
@@ -47,7 +59,7 @@ try:
                 with col2:
                     st.markdown(f"**{row['producto']}**")
                     st.caption(f"📍 {row['sucursal']} | SKU: `{row['lote']}`")
-                    st.markdown(f"~~\${row['precio_original']}~~ ➡️ **:red[\${row['precio_final']}]**")
+                    st.markdown(f"~~${row['precio_original']}~~ ➡️ **:red[${row['precio_final']}]**")
                     st.progress(int(row['frescura_ia']))
                 with col3:
                     qr = f"https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={row['lote']}"
